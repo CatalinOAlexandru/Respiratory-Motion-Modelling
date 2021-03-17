@@ -59,7 +59,7 @@ plot(x_20(1:300))
 
 % 6.3 
 % work already done for 6.3 is: fit CP image: (44,38,1,1,2)
-% work has been done yet for 6.3 is: fit a separate model to every CP deformation
+% work has not been done yet for 6.3 is: fit a separate model to every CP deformation
 % using the matrix format in the Appendix is recommended 
 
 % fit CP image: (44,38,1,1,2)
