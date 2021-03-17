@@ -1,0 +1,4 @@
+__pycache__/
+.DS_Store
+workflow_package_files/
+.pytest_cache
