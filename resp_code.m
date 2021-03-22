@@ -2,7 +2,7 @@
 % load the data
 n = length(images);
 
-landmark = load("landmark_pos_phys.mat")
+landmark = load("landmark_pos_phys.mat");
 landmark_pos = landmark.landmark_pos_phys;
 
 target_nii = load_untouch_nii('0500.nii.gz');
@@ -23,9 +23,48 @@ dispNiiSlice(cpg2_nii,"z",1)
 
 % deform an image with a B-spline transformation 
 [def_vol_nii, def_field_nii, dis_field_nii] = ...
-    deformNiiWithCPGsSliding(cpg1_nii, cpg2_nii, dist_nii, source_nii, target_nii)
+    deformNiiWithCPGsSliding(cpg1_nii, cpg2_nii, dist_nii, source_nii, target_nii);
 figure;
-dispNiiSlice(def_vol_nii,"z",1)
+dispNiiSlice(def_vol_nii,"z",1);
+
+%%
+% Just display all images one after another as the tasks asks for: 
+% "display all the MR images to get a feel..."
+
+for k = 1:n
+  disp(k);
+  dispNiiSlice(images(k),"z",1);
+  drawnow;
+end
+
+%%
+% Side by side comparison for all deformations. Runs slow or might be my
+% laptop. Set to only first 100 images.
+% Plot titles dont work for some reason. Might be dispNiiSlice funtion.
+
+% I also suggest to edit dispNiiSlice to have 'show_axes' as folse
+% directly in the function.
+
+for k = 1:100
+  disp(k);
+  [def_vol_nii, ~, ~] = ...
+        deformNiiWithCPGsSliding(cpg1(k), cpg2(k), dist_nii, source_nii, images(k));
+    
+  t = tiledlayout(1,3);
+  nexttile
+  dispNiiSlice(source_nii,"z",1);
+  title('Source Image')
+  
+  nexttile
+  dispNiiSlice(def_vol_nii,"z",1);
+  title('Deformed Image')
+  
+  nexttile
+  dispNiiSlice(images(k),"z",1);
+  title('Target Image')
+
+  drawnow;
+end
 
 %% 6.2 Calculate the surrogate signal
 
@@ -139,9 +178,9 @@ C_p2_reg1_SI = reshape(C_p2(:,(4489+1):8978),[],67,67);
 C_p3_reg1_SI = reshape(C_p3(:,(4489+1):8978),[],67,67);
 
 % get the corresponding coefficients
-C_44_38 = C_reg1_SI(:,44,38)
-C_p2_44_38 = C_p2_reg1_SI(:,44,38)
-C_p3_44_38 = C_p3_reg1_SI(:,44,38)
+C_44_38 = C_reg1_SI(:,44,38);
+C_p2_44_38 = C_p2_reg1_SI(:,44,38);
+C_p3_44_38 = C_p3_reg1_SI(:,44,38);
 
 
 %% Print the estimated models at CP 44-38
@@ -158,6 +197,7 @@ hold on
 [sorted_p3,ind] = sort(S_p3*C_p3_44_38,'descend');
 plot(x_20(ind), sorted_p3,'m-');
 ylim([30,55])
+legend;
 xlabel("surrogate value")
 ylabel("control-point value")
 hold off
