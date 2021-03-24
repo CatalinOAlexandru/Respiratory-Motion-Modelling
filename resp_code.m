@@ -208,3 +208,29 @@ res_lin = (Y_train_mat - S_lin*C);
 res_p2 = (Y_train_mat - S_p2*C_p2);
 res_p3 = (Y_train_mat - S_p2*C_p2);
 
+mse_lin = sum((Y_train_mat - S_lin*C).^2,1)./(n_train- 2);
+mse_p2 = sum((Y_train_mat - S_p2*C_p2).^2,1)./(n_train- 3);
+mse_p3 = sum((Y_train_mat - S_p3*C_p3).^2,1)./(n_train- 4);
+
+% retrieve the info CP: Region 1 AP and reshape them in a 67x67 grid
+mse_reg1_AP = reshape(mse_lin(1,(4489*0+1):4489*1),67,67);
+
+% retrieve info of CP: Region 1 SI and reshape them in a 67x67 grid
+mse_reg1_SI = reshape(mse_lin(1,(4489*1+1):4489*2),67,67);
+
+% retrieve info of CP: Region 2 AP and reshape them in a 67x67 grid
+mse_reg2_AP =  reshape(mse_lin(1,(4489*2+1):4489*3),67,67);
+
+% retrieve info of CP: Region 2 SI and reshape them in a 67x67 grid
+mse_reg2_SI =  reshape(mse_lin(1,(4489*3+1):4489*4),67,67);
+
+figure;
+imshow(mse_reg1_AP');
+figure;
+imshow(mse_reg2_AP');
+
+
+figure;
+imshow(mse_reg1_SI');
+figure;
+imshow(mse_reg2_SI');
