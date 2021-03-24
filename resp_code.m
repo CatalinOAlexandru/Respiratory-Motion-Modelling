@@ -177,29 +177,39 @@ C_reg1_SI = reshape(C(:,(4489+1):8978),[],67,67);
 C_p2_reg1_SI = reshape(C_p2(:,(4489+1):8978),[],67,67);
 C_p3_reg1_SI = reshape(C_p3(:,(4489+1):8978),[],67,67);
 
-% get the corresponding coefficients
-C_44_38 = C_reg1_SI(:,44,38);
-C_p2_44_38 = C_p2_reg1_SI(:,44,38);
-C_p3_44_38 = C_p3_reg1_SI(:,44,38);
+% % get the corresponding coefficients
+% C_44_38 = C_reg1_SI(:,44,38);
+% C_p2_44_38 = C_p2_reg1_SI(:,44,38);
+% C_p3_44_38 = C_p3_reg1_SI(:,44,38);
 
 
 %% Print the estimated models at CP 44-38
+x=linspace(min(x_20(1:100))-0.5,max(x_20(1:100))+0.5,100)';
+i = 44;
+j = 38;
+c_linear = C_reg1_SI(:,i,j);
+c_p2 = C_p2_reg1_SI(:,i,j);
+c_p3 = C_p3_reg1_SI(:,i,j);
+
 figure;
-plot(x_20(1:100),SI_deform_CP_44_38(1:100),':')
-hold on;
+%plot(x_20(1:100),SI_deform_CP_44_38(1:100),':')
+%hold on;
 plot(x_20(1:100),SI_deform_CP_44_38(1:100),'bx');
 hold on;
-plot(x_20(1:100),S_lin*C_44_38,'r-');
+plot(x,[x,ones(100,1)]*c_linear,'r-');
 hold on
-[sorted_p2,ind] = sort(S_p2*C_p2_44_38,'descend');
-plot(x_20(ind), sorted_p2,'g-');
+%[sorted_p2,ind] = sort(S_p2*C_p2_44_38,'descend');
+%plot(x_20(ind), sorted_p2,'g-');
+plot(x,[x.^2,x,ones(100,1)]*c_p2,'g-');
 hold on
-[sorted_p3,ind] = sort(S_p3*C_p3_44_38,'descend');
-plot(x_20(ind), sorted_p3,'m-');
+%[sorted_p3,ind] = sort(S_p3*C_p3_44_38,'descend');
+%plot(x_20(ind), sorted_p3,'m-');
+plot(x,[x.^3,x.^2,x,ones(100,1)]*c_p3,'m-');
 ylim([30,55])
 legend;
 xlabel("surrogate value")
 ylabel("control-point value")
+legend('data','linear',"2nd poly","3rd poly")
 hold off
 
 %% Calculate the residual fitting error.
@@ -224,13 +234,55 @@ mse_reg2_AP =  reshape(mse_lin(1,(4489*2+1):4489*3),67,67);
 % retrieve info of CP: Region 2 SI and reshape them in a 67x67 grid
 mse_reg2_SI =  reshape(mse_lin(1,(4489*3+1):4489*4),67,67);
 
+dist_map = dist_nii.img;
+
 figure;
-imshow(mse_reg1_AP');
-figure;
-imshow(mse_reg2_AP');
+subplot(1,3,1)
+imshow(mse_reg1_AP',[]);
+subplot(1,3,2)
+imshow(mse_reg2_AP',[]);
+subplot(1,3,3)
+dispNiiSlice(source_nii,"z",1)
 
 
 figure;
-imshow(mse_reg1_SI');
+subplot(1,3,1)
+imshow(mse_reg1_SI',[]);
+subplot(1,3,2)
+imshow(mse_reg2_SI',[]);
+subplot(1,3,3)
+dispNiiSlice(source_nii,"z",1)
+
+%% bootstrap 
+% version one: classical bootstap
+% resampling Y_train
+
+n_boot_v1 = 1000;
+C1_boot_v1 = nan(n_boot,2);
+C2_boot_v1 = nan(n_boot,3);
+C3_boot_v1 = nan(n_boot,4);
+
+Y_train = SI_deform_CP_44_38(1:100);
+X_linear = [ones(length(x_20(1:100)),1),x_20(1:100)];
+Y_linear = X_linear*inv(X_linear'*X_linear)*X_linear'*Y_train;
+sigma = sqrt(sum((Y_linear-Y_train).^2)/(100-2));
+
+coef_v1 = nan(n_boot,2);
+for i = 1: n_boot
+    T = 100; 
+    Y_train_boot_v1 = Y_train + normrnd(0,sigma,[100,1]);
+    coef_v1(i,:) = inv(X_linear'*X_linear)*X_linear'*Y_train_boot_v1;
+end
+
+
 figure;
-imshow(mse_reg2_SI');
+subplot(1,2,1)
+hist(coef_v1(:,1))
+subplot(1,2,2)
+hist(coef_v1(:,2))
+
+% version two : redidual bootstrap
+% version three: wild bootstap
+
+Y_train = SI_deform_CP_44_38(1:100);
+X_linear = [ones(length(x_20(1:100)),1),x_20(1:100)];
