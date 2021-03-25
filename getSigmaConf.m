@@ -7,7 +7,8 @@ sortedCoef = sort(coef);
 
 [lowLimit, uppLimit] = deal(sortedCoef(floor(0.025*n)),sortedCoef(ceil(0.975*n)));  
 
-twoSigma = [meanCoef - stdCoef, meanCoef + stdCoef];
+% twoSigma = [meanCoef - stdCoef, meanCoef + stdCoef];
+twoSigma = [meanCoef - 2*stdCoef, meanCoef + 2*stdCoef];
 conf95 = [lowLimit, uppLimit];
 end
 

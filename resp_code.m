@@ -300,7 +300,20 @@ conf95 = zeros(9,2);
 [twoSigma(8,:),conf95(8,:)] = getSigmaConf(C3_boot_v1(:,3));
 [twoSigma(9,:),conf95(9,:)] = getSigmaConf(C3_boot_v1(:,4));
 
-plotBootstrap(twoSigma,conf95);
+% plotBootstrap(twoSigma,conf95);
+
+figure;
+
+hist(C1_boot_v1(:,1))
+title('Linear Model Coefficient 1');
+maxY = ylim;
+hold on
+plot(conf95(1,:), 1.05*[maxY(2), maxY(2)],'--o');
+hold on
+plot(twoSigma(1,:), 1.1*[maxY(2), maxY(2)], '--o');
+legend('p(x|A)','95% range','2 Sigma','location','west');
+
+
 
 
 %% version two : redidual bootstrapping
@@ -335,12 +348,6 @@ for i = 1: n_boot
     C3_boot_v2(i,:) = inv(X_poly3'*X_poly3)*X_poly3'*Y3_train_boot_v2;
 end
 
-% figure;
-% subplot(1,2,1)
-% hist(C1_boot_v2(:,1))
-% subplot(1,2,2)
-% hist(C1_boot_v2(:,2))
-
 twoSigma_v2 = zeros(9,2);
 conf95_v2 = zeros(9,2);
 [twoSigma_v2(1,:),conf95_v2(1,:)] = getSigmaConf(C1_boot_v2(:,1));
@@ -355,7 +362,17 @@ conf95_v2 = zeros(9,2);
 [twoSigma_v2(8,:),conf95_v2(8,:)] = getSigmaConf(C3_boot_v2(:,3));
 [twoSigma_v2(9,:),conf95_v2(9,:)] = getSigmaConf(C3_boot_v2(:,4));
 
-plotBootstrap(twoSigma_v2,conf95_v2);
+% plotBootstrap(twoSigma_v2,conf95_v2);
+
+figure;
+hist(C1_boot_v2(:,1))
+title('2nd Order Polynomial Model Coefficient 1');
+maxY = ylim;
+hold on
+plot(conf95_v2(1,:), 1.05*[maxY(2), maxY(2)],'--o');
+hold on
+plot(twoSigma_v2(1,:), 1.1*[maxY(2), maxY(2)], '--o');
+legend('p(x|A)','95% range','2 Sigma','location','west');
 
 
 %% version three : wild bootstrap
@@ -390,11 +407,6 @@ for i = 1: n_boot
     C3_boot_v3(i,:) = inv(X_poly3'*X_poly3)*X_poly3'*Y3_train_boot_v3;
 end
 
-% figure;
-% subplot(1,2,1)
-% hist(C1_boot_v3(:,1))
-% subplot(1,2,2)
-% hist(C1_boot_v3(:,2))
 
 twoSigma_v3 = zeros(9,2);
 conf95_v3 = zeros(9,2);
@@ -410,13 +422,23 @@ conf95_v3 = zeros(9,2);
 [twoSigma_v3(8,:),conf95_v3(8,:)] = getSigmaConf(C3_boot_v3(:,3));
 [twoSigma_v3(9,:),conf95_v3(9,:)] = getSigmaConf(C3_boot_v3(:,4));
 
-plotBootstrap(twoSigma_v3,conf95_v3);
+% plotBootstrap(twoSigma_v3,conf95_v3);
 
-
+figure;
+hist(C1_boot_v3(:,1))
+title('3rd Order Polynomial Model Coefficient 1');
+maxY = ylim;
+hold on
+plot(conf95_v3(1,:), 1.05*[maxY(2), maxY(2)],'--o');
+hold on
+plot(twoSigma_v3(1,:), 1.1*[maxY(2), maxY(2)], '--o');
+legend('p(x|A)','95% range','2 Sigma','location','west');
 
 %% Comparing Bootstraps
 
-compareBootstraps(twoSigma,twoSigma_v2,twoSigma_v3,conf95,conf95_v2,conf95_v3);
-
+% prints a plot for each coefficient (9 plots) if grouped is false
+% or plot groups based on model
+grouped = false;
+compareBootstraps(twoSigma,twoSigma_v2,twoSigma_v3,conf95,conf95_v2,conf95_v3,grouped);
 
 
