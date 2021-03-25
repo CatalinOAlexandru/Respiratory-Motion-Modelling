@@ -253,9 +253,7 @@ imshow(mse_reg2_SI',[]);
 subplot(1,3,3)
 dispNiiSlice(source_nii,"z",1)
 
-%% bootstrap 
-% version one: classical bootstap
-% resampling Y_train
+%% Parametric bootstrapping
 
 n_boot = 1000;
 C1_boot_v1 = nan(n_boot,2);
@@ -304,9 +302,121 @@ conf95 = zeros(9,2);
 
 plotBootstrap(twoSigma,conf95);
 
-%% version two : redidual bootstrap
+
+%% version two : redidual bootstrapping
+
+n_boot = 1000;
+C1_boot_v2 = nan(n_boot,2);
+C2_boot_v2 = nan(n_boot,3);
+C3_boot_v2 = nan(n_boot,4);
+
+Y_train = SI_deform_CP_44_38(1:100);
+X_linear = [ones(length(x_20(1:100)),1),x_20(1:100)];
+Y_linear = X_linear*inv(X_linear'*X_linear)*X_linear'*Y_train;
+
+X_poly2 = [x_20(1:100).^2,x_20(1:100),ones(length(x_20(1:100)),1)];
+Y_poly2 = X_poly2*inv(X_poly2'*X_poly2)*X_poly2'*Y_train;
+
+X_poly3 = [x_20(1:100).^3, x_20(1:100).^2,x_20(1:100),ones(length(x_20(1:100)),1)];
+Y_poly3 = X_poly3*inv(X_poly3'*X_poly3)*X_poly3'*Y_train;
+
+noises1 = Y_train - Y_linear;
+noises2 = Y_train - Y_poly2;
+noises3 = Y_train - Y_poly3;
+
+for i = 1: n_boot
+    Y1_train_boot_v2 = Y_linear + noises1(ceil(rand(n_train,1)*n_train));
+    C1_boot_v2(i,:) = inv(X_linear'*X_linear)*X_linear'*Y1_train_boot_v2;
+    
+    Y2_train_boot_v2 = Y_poly2 + noises2(ceil(rand(n_train,1)*n_train));
+    C2_boot_v2(i,:) = inv(X_poly2'*X_poly2)*X_poly2'*Y2_train_boot_v2;
+    
+    Y3_train_boot_v2 = Y_poly3 + noises3(ceil(rand(n_train,1)*n_train));
+    C3_boot_v2(i,:) = inv(X_poly3'*X_poly3)*X_poly3'*Y3_train_boot_v2;
+end
+
+% figure;
+% subplot(1,2,1)
+% hist(C1_boot_v2(:,1))
+% subplot(1,2,2)
+% hist(C1_boot_v2(:,2))
+
+twoSigma_v2 = zeros(9,2);
+conf95_v2 = zeros(9,2);
+[twoSigma_v2(1,:),conf95_v2(1,:)] = getSigmaConf(C1_boot_v2(:,1));
+[twoSigma_v2(2,:),conf95_v2(2,:)] = getSigmaConf(C1_boot_v2(:,2));
+
+[twoSigma_v2(3,:),conf95_v2(3,:)] = getSigmaConf(C2_boot_v2(:,1));
+[twoSigma_v2(4,:),conf95_v2(4,:)] = getSigmaConf(C2_boot_v2(:,2));
+[twoSigma_v2(5,:),conf95_v2(5,:)] = getSigmaConf(C2_boot_v2(:,3));
+
+[twoSigma_v2(6,:),conf95_v2(6,:)] = getSigmaConf(C3_boot_v2(:,1));
+[twoSigma_v2(7,:),conf95_v2(7,:)] = getSigmaConf(C3_boot_v2(:,2));
+[twoSigma_v2(8,:),conf95_v2(8,:)] = getSigmaConf(C3_boot_v2(:,3));
+[twoSigma_v2(9,:),conf95_v2(9,:)] = getSigmaConf(C3_boot_v2(:,4));
+
+plotBootstrap(twoSigma_v2,conf95_v2);
 
 
+%% version three : wild bootstrap
+coef_v3 = nan(n_boot,2);
+
+C1_boot_v3 = nan(n_boot,2);
+C2_boot_v3 = nan(n_boot,3);
+C3_boot_v3 = nan(n_boot,4);
+
+Y_train = SI_deform_CP_44_38(1:100);
+X_linear = [ones(length(x_20(1:100)),1),x_20(1:100)];
+Y_linear = X_linear*inv(X_linear'*X_linear)*X_linear'*Y_train;
+
+X_poly2 = [x_20(1:100).^2,x_20(1:100),ones(length(x_20(1:100)),1)];
+Y_poly2 = X_poly2*inv(X_poly2'*X_poly2)*X_poly2'*Y_train;
+
+X_poly3 = [x_20(1:100).^3, x_20(1:100).^2,x_20(1:100),ones(length(x_20(1:100)),1)];
+Y_poly3 = X_poly3*inv(X_poly3'*X_poly3)*X_poly3'*Y_train;
+
+noises1 = Y_train - Y_linear;
+noises2 = Y_train - Y_poly2;
+noises3 = Y_train - Y_poly3;
+
+for i = 1: n_boot    
+    Y1_train_boot_v3 = Y_linear + noises1(ceil(rand(n_train,1)*n_train)).* normrnd(0,1,[100,1]);
+    C1_boot_v3(i,:) = inv(X_linear'*X_linear)*X_linear'*Y1_train_boot_v3;
+    
+    Y2_train_boot_v3 = Y_poly2 + noises2(ceil(rand(n_train,1)*n_train)).* normrnd(0,1,[100,1]);
+    C2_boot_v3(i,:) = inv(X_poly2'*X_poly2)*X_poly2'*Y2_train_boot_v3;
+    
+    Y3_train_boot_v3 = Y_poly3 + noises3(ceil(rand(n_train,1)*n_train)).* normrnd(0,1,[100,1]);
+    C3_boot_v3(i,:) = inv(X_poly3'*X_poly3)*X_poly3'*Y3_train_boot_v3;
+end
+
+% figure;
+% subplot(1,2,1)
+% hist(C1_boot_v3(:,1))
+% subplot(1,2,2)
+% hist(C1_boot_v3(:,2))
+
+twoSigma_v3 = zeros(9,2);
+conf95_v3 = zeros(9,2);
+[twoSigma_v3(1,:),conf95_v3(1,:)] = getSigmaConf(C1_boot_v3(:,1));
+[twoSigma_v3(2,:),conf95_v3(2,:)] = getSigmaConf(C1_boot_v3(:,2));
+
+[twoSigma_v3(3,:),conf95_v3(3,:)] = getSigmaConf(C2_boot_v3(:,1));
+[twoSigma_v3(4,:),conf95_v3(4,:)] = getSigmaConf(C2_boot_v3(:,2));
+[twoSigma_v3(5,:),conf95_v3(5,:)] = getSigmaConf(C2_boot_v3(:,3));
+
+[twoSigma_v3(6,:),conf95_v3(6,:)] = getSigmaConf(C3_boot_v3(:,1));
+[twoSigma_v3(7,:),conf95_v3(7,:)] = getSigmaConf(C3_boot_v3(:,2));
+[twoSigma_v3(8,:),conf95_v3(8,:)] = getSigmaConf(C3_boot_v3(:,3));
+[twoSigma_v3(9,:),conf95_v3(9,:)] = getSigmaConf(C3_boot_v3(:,4));
+
+plotBootstrap(twoSigma_v3,conf95_v3);
+
+
+
+%% Comparing Bootstraps
+
+compareBootstraps(twoSigma,twoSigma_v2,twoSigma_v3,conf95,conf95_v2,conf95_v3);
 
 
 
