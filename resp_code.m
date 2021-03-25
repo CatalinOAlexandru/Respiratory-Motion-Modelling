@@ -45,7 +45,7 @@ end
 % I also suggest to edit dispNiiSlice to have 'show_axes' as folse
 % directly in the function.
 
-for k = 1:100
+for k = 1:500
   disp(k);
   [def_vol_nii, ~, ~] = ...
         deformNiiWithCPGsSliding(cpg1(k), cpg2(k), dist_nii, source_nii, images(k));
@@ -213,7 +213,7 @@ legend('data','linear',"2nd poly","3rd poly")
 hold off
 
 %% Calculate the residual fitting error.
-
+n_train = 100;
 res_lin = (Y_train_mat - S_lin*C);
 res_p2 = (Y_train_mat - S_p2*C_p2);
 res_p3 = (Y_train_mat - S_p2*C_p2);
@@ -257,7 +257,7 @@ dispNiiSlice(source_nii,"z",1)
 % version one: classical bootstap
 % resampling Y_train
 
-n_boot_v1 = 1000;
+n_boot = 1000;
 C1_boot_v1 = nan(n_boot,2);
 C2_boot_v1 = nan(n_boot,3);
 C3_boot_v1 = nan(n_boot,4);
@@ -265,24 +265,48 @@ C3_boot_v1 = nan(n_boot,4);
 Y_train = SI_deform_CP_44_38(1:100);
 X_linear = [ones(length(x_20(1:100)),1),x_20(1:100)];
 Y_linear = X_linear*inv(X_linear'*X_linear)*X_linear'*Y_train;
-sigma = sqrt(sum((Y_linear-Y_train).^2)/(100-2));
 
-coef_v1 = nan(n_boot,2);
+X_poly2 = [x_20(1:100).^2,x_20(1:100),ones(length(x_20(1:100)),1)];
+Y_poly2 = X_poly2*inv(X_poly2'*X_poly2)*X_poly2'*Y_train;
+
+X_poly3 = [x_20(1:100).^3, x_20(1:100).^2,x_20(1:100),ones(length(x_20(1:100)),1)];
+Y_poly3 = X_poly3*inv(X_poly3'*X_poly3)*X_poly3'*Y_train;
+
+sigma1 = sqrt(sum((Y_linear-Y_train).^2)/(100-2));
+sigma2 = sqrt(sum((Y_poly2-Y_train).^2)/(100-2));
+sigma3 = sqrt(sum((Y_poly3-Y_train).^2)/(100-2));
+
 for i = 1: n_boot
-    T = 100; 
-    Y_train_boot_v1 = Y_train + normrnd(0,sigma,[100,1]);
-    coef_v1(i,:) = inv(X_linear'*X_linear)*X_linear'*Y_train_boot_v1;
+
+    Y1_train_boot_v1 = Y_train + normrnd(0,sigma1,[100,1]);
+    C1_boot_v1(i,:) = inv(X_linear'*X_linear)*X_linear'*Y1_train_boot_v1;
+    
+    Y2_train_boot_v1 = Y_train + normrnd(0,sigma2,[100,1]);
+    C2_boot_v1(i,:) = inv(X_poly2'*X_poly2)*X_poly2'*Y2_train_boot_v1;
+    
+    Y3_train_boot_v1 = Y_train + normrnd(0,sigma3,[100,1]);
+    C3_boot_v1(i,:) = inv(X_poly3'*X_poly3)*X_poly3'*Y3_train_boot_v1;
 end
 
+twoSigma = zeros(9,2);
+conf95 = zeros(9,2);
+[twoSigma(1,:),conf95(1,:)] = getSigmaConf(C1_boot_v1(:,1));
+[twoSigma(2,:),conf95(2,:)] = getSigmaConf(C1_boot_v1(:,2));
 
-figure;
-subplot(1,2,1)
-hist(coef_v1(:,1))
-subplot(1,2,2)
-hist(coef_v1(:,2))
+[twoSigma(3,:),conf95(3,:)] = getSigmaConf(C2_boot_v1(:,1));
+[twoSigma(4,:),conf95(4,:)] = getSigmaConf(C2_boot_v1(:,2));
+[twoSigma(5,:),conf95(5,:)] = getSigmaConf(C2_boot_v1(:,3));
 
-% version two : redidual bootstrap
-% version three: wild bootstap
+[twoSigma(6,:),conf95(6,:)] = getSigmaConf(C3_boot_v1(:,1));
+[twoSigma(7,:),conf95(7,:)] = getSigmaConf(C3_boot_v1(:,2));
+[twoSigma(8,:),conf95(8,:)] = getSigmaConf(C3_boot_v1(:,3));
+[twoSigma(9,:),conf95(9,:)] = getSigmaConf(C3_boot_v1(:,4));
 
-Y_train = SI_deform_CP_44_38(1:100);
-X_linear = [ones(length(x_20(1:100)),1),x_20(1:100)];
+plotBootstrap(twoSigma,conf95);
+
+%% version two : redidual bootstrap
+
+
+
+
+
