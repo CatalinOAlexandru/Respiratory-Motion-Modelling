@@ -2,9 +2,9 @@
 By Qiyue Liu
 %This is a whole individual code, which only depend on libraries given by
 %teacher. The last several parts are for landmark estimation. But I'm not
-%confident about them. Maybe there are some mistakes... I will check them.
+%confident about them.
 
-2021.3.23
+2021.3.25
 
 The results are:
 1 is linear model. 2 is square model. 3 is pow3 model
@@ -16,44 +16,32 @@ lme3=  1.573436758278711  10.187688073524885
 
 aic1 =
 
-   1.0e+03 *
-
-   0.729801270237259   3.821000045518490
+     1.743238856308132e+03
 
 
 aic2 =
 
-   1.0e+03 *
-
-   0.801469383179333   3.748082327262624
+     1.713354288070525e+03
 
 
 aic3 =
 
-   1.0e+03 *
-
-   0.642567142948090   3.257651915442061
+     1.390429807351284e+03
 
 
 bic1 =
 
-   1.0e+03 *
-
-   0.740289725268466   3.831488500549696
+     1.753727311339339e+03
 
 
 bic2 =
 
-   1.0e+03 *
-
-   0.747533952784069   3.838732728065299
+     1.729086970617336e+03
 
 
 bic3 =
 
-   1.0e+03 *
-
-   0.754778180299672   3.845976955580903
+     1.411406717413698e+03
 
 %}
 %%
@@ -296,9 +284,12 @@ load('./images/landmark_pos_phys.mat');
 
 dist_nii=load_untouch_nii('./segmentation/0007_sdt.nii');
 pointsGT=landmark_pos_phys(:,:,7);
-target_nii=load_untouch_nii('./images/0007.nii');
+
+points_array=zeros(3,1400,4,2);
+
 
 for n=101:1500
+target_nii=load_untouch_nii(sprintf('./images/%04d.nii',n));
 cpg1_nii3=load_untouch_nii(sprintf('./eve3/%04d_cpp_region1.nii',n));
 cpg2_nii3=load_untouch_nii(sprintf('./eve3/%04d_cpp_region2.nii',n));
 
@@ -315,12 +306,19 @@ points_orig=landmark_pos_phys(:,:,n);
 
 points3=transPointsWithCPGsSliding(cpg1_nii3, cpg2_nii3, dist_nii, points_orig, target_nii);
 lme3(n-100,:)=mean((points3-pointsGT).^2);
+L2error3(n-100)=mean(sqrt((points3(:,1)-pointsGT(:,1)).^2+(points3(:,2)-pointsGT(:,2)).^2 ));
 
 points2=transPointsWithCPGsSliding(cpg1_nii2, cpg2_nii2, dist_nii, points_orig, target_nii);
 lme2(n-100,:)=mean((points2-pointsGT).^2);
+L2error2(n-100)=mean(sqrt((points2(:,1)-pointsGT(:,1)).^2+(points2(:,2)-pointsGT(:,2)).^2 ));
 
 points1=transPointsWithCPGsSliding(cpg1_nii1, cpg2_nii1, dist_nii, points_orig, target_nii);
 lme1(n-100,:)=mean((points1-pointsGT).^2);
+L2error1(n-100)=mean(sqrt((points1(:,1)-pointsGT(:,1)).^2+(points1(:,2)-pointsGT(:,2)).^2 ));
+
+points_array(1,n-100,:,:)=points1;
+points_array(2,n-100,:,:)=points2;
+points_array(3,n-100,:,:)=points3;
 
 end
 %%
@@ -337,12 +335,29 @@ plot(lme3(:,1)); hold on
 plot(lme3(:,2));
 disp(mean(lme3));
 %%
+figure;
+plot(L2error3); hold on
+plot(L2error2); hold on
+plot(L2error1);
+disp(mean(L2error3));
+disp(mean(L2error2));
+disp(mean(L2error1));
+%%
 k=1400;
 
-aic1=2*2+k*log(mean(lme1))
-aic2=2*3+k*log(mean(lme2))
-aic3=2*4+k*log(mean(lme3))
+aic1=2*2+k*log(mean(L2error1))
+aic2=2*3+k*log(mean(L2error2))
+aic3=2*4+k*log(mean(L2error3))
 
-bic1=log(k)*2+k*log(mean(lme1))
-bic2=log(k)*3+k*log(mean(lme1))
-bic3=log(k)*4+k*log(mean(lme1))
+bic1=log(k)*2+k*log(mean(L2error1))
+bic2=log(k)*3+k*log(mean(L2error2))
+bic3=log(k)*4+k*log(mean(L2error3))
+
+%% plot tranfromed landmarks
+res=load_untouch_nii('./images/0007.nii');
+d=3; %choose 1/2/3
+for n=1:1400
+  image=dispNiiSlice(res,'z',1); hold on
+scatter(points_array(d,n,:,1),points_array(d,n,:,2));
+pause(0.1);
+end
