@@ -308,10 +308,10 @@ hist(C1_boot_v1(:,1))
 title('Linear Model Coefficient 1');
 maxY = ylim;
 hold on
-plot(conf95(1,:), 1.05*[maxY(2), maxY(2)],'--o');
+plot(conf95(1,:), 1.05*[maxY(2), maxY(2)],'r--x','LineWidth',1.5);
 hold on
-plot(twoSigma(1,:), 1.1*[maxY(2), maxY(2)], '--o');
-legend('p(x|A)','95% range','2 Sigma','location','west');
+plot(twoSigma(1,:), 1.1*[maxY(2), maxY(2)], 'b-o','LineWidth',1.5);
+legend('p(x|A)','95% range','2 Sigma','location','west','LineWidth',1.5);
 
 
 
@@ -369,9 +369,9 @@ hist(C1_boot_v2(:,1))
 title('2nd Order Polynomial Model Coefficient 1');
 maxY = ylim;
 hold on
-plot(conf95_v2(1,:), 1.05*[maxY(2), maxY(2)],'--o');
+plot(conf95_v2(1,:), 1.05*[maxY(2), maxY(2)],'r--x','LineWidth',1.5);
 hold on
-plot(twoSigma_v2(1,:), 1.1*[maxY(2), maxY(2)], '--o');
+plot(twoSigma_v2(1,:), 1.1*[maxY(2), maxY(2)], 'b-o','LineWidth',1.5);
 legend('p(x|A)','95% range','2 Sigma','location','west');
 
 
@@ -429,9 +429,9 @@ hist(C1_boot_v3(:,1))
 title('3rd Order Polynomial Model Coefficient 1');
 maxY = ylim;
 hold on
-plot(conf95_v3(1,:), 1.05*[maxY(2), maxY(2)],'--o');
+plot(conf95_v3(1,:), 1.05*[maxY(2), maxY(2)],'r--x','LineWidth',1.5);
 hold on
-plot(twoSigma_v3(1,:), 1.1*[maxY(2), maxY(2)], '--o');
+plot(twoSigma_v3(1,:), 1.1*[maxY(2), maxY(2)], 'b-o','LineWidth',1.5);
 legend('p(x|A)','95% range','2 Sigma','location','west');
 
 %% Comparing Bootstraps

@@ -3,6 +3,7 @@ function compareBootstraps(twoSigma,twoSigma_v2,twoSigma_v3,conf95,conf95_v2,con
 if grouped==false
     len = size(twoSigma);
     for i=1:len(1)
+        clf;
         h = figure;
         if i < 3
             newTitle = sprintf('Linear - Coefficient %i',i);
@@ -17,19 +18,19 @@ if grouped==false
 
         maxY = ylim;
         hold on
-        plot(twoSigma(1,:), 1.25*[maxY(2), maxY(2)], 'r--x','LineWidth',1.5);
+        plot(twoSigma(i,:), 1.25*[maxY(2), maxY(2)], 'r--x','LineWidth',1.5);
         hold on
-        plot(conf95(1,:), 1.2*[maxY(2), maxY(2)],'r-o','LineWidth',1.5);
+        plot(conf95(i,:), 1.2*[maxY(2), maxY(2)],'r-o','LineWidth',1.5);
 
         hold on
-        plot(twoSigma_v2(1,:), 1.15*[maxY(2), maxY(2)], 'g--x','LineWidth',1.5);
+        plot(twoSigma_v2(i,:), 1.15*[maxY(2), maxY(2)], 'g--x','LineWidth',1.5);
         hold on
-        plot(conf95_v2(1,:), 1.1*[maxY(2), maxY(2)],'g-o','LineWidth',1.5);
+        plot(conf95_v2(i,:), 1.1*[maxY(2), maxY(2)],'g-o','LineWidth',1.5);
 
         hold on
-        plot(twoSigma_v3(1,:), 1.05*[maxY(2), maxY(2)], 'b--x','LineWidth',1.5);
+        plot(twoSigma_v3(i,:), 1.05*[maxY(2), maxY(2)], 'b--x','LineWidth',1.5);
         hold on
-        plot(conf95_v3(1,:), 1*[maxY(2), maxY(2)],'b-o','LineWidth',1.5);
+        plot(conf95_v3(i,:), 1*[maxY(2), maxY(2)],'b-o','LineWidth',1.5);
 
         set(gca,'YTickLabel',[])
         ylim([0.95,1.3]);
@@ -53,7 +54,7 @@ if grouped==false
 else
     % linear 
     figure;
-    subplot(1,2,1)
+    subplot(2,1,1)
     title('Linear - Coefficient 1');
     maxY = ylim;
     hold on
@@ -79,7 +80,7 @@ else
            'location','northoutside');
 
 
-    subplot(1,2,2)
+    subplot(2,1,2)
     title('Linear - Coefficient 2');
     maxY = ylim;
 
