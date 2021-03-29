@@ -6,8 +6,8 @@ landmark = load("landmark_pos_phys.mat");
 landmark_pos = landmark.landmark_pos_phys;
 
 target_nii = load_untouch_nii('0500.nii.gz');
-cpg1_nii = load_untouch_nii('0500_cpp_region1.nii.gz');
-cpg2_nii = load_untouch_nii('0500_cpp_region2.nii.gz');
+cpg1_nii = load_untouch_nii('0100_cpp_region1.nii.gz');
+cpg2_nii = load_untouch_nii('0100_cpp_region2.nii.gz');
 source_nii = load_untouch_nii('0007.nii.gz');
 dist_nii = load_untouch_nii('0007_sdt.nii.gz');
 
@@ -21,21 +21,21 @@ dispNiiSlice(cpg1_nii,"z",1);
 figure;
 dispNiiSlice(cpg2_nii,"z",1)
 
-% deform an image with a B-spline transformation 
-[def_vol_nii, def_field_nii, dis_field_nii] = ...
-    deformNiiWithCPGsSliding(cpg1_nii, cpg2_nii, dist_nii, source_nii, target_nii);
-figure;
-dispNiiSlice(def_vol_nii,"z",1);
+% % deform an image with a B-spline transformation 
+% [def_vol_nii, def_field_nii, dis_field_nii] = ...
+%     deformNiiWithCPGsSliding(cpg1_nii, cpg2_nii, dist_nii, source_nii, target_nii);
+% figure;
+% dispNiiSlice(def_vol_nii,"z",1);
 
 %%
 % Just display all images one after another as the tasks asks for: 
 % "display all the MR images to get a feel..."
 
-for k = 1:n
-  disp(k);
-  dispNiiSlice(images(k),"z",1);
-  drawnow;
-end
+% for k = 1:n
+%   disp(k);
+%   dispNiiSlice(images(k),"z",1);
+%   drawnow;
+% end
 
 %%
 % Side by side comparison for all deformations. Runs slow or might be my
@@ -45,40 +45,31 @@ end
 % I also suggest to edit dispNiiSlice to have 'show_axes' as folse
 % directly in the function.
 
-for k = 1:500
-  disp(k);
-  [def_vol_nii, ~, ~] = ...
-        deformNiiWithCPGsSliding(cpg1(k), cpg2(k), dist_nii, source_nii, images(k));
-    
-  t = tiledlayout(1,3);
-  nexttile
-  dispNiiSlice(source_nii,"z",1);
-  title('Source Image')
-  
-  nexttile
-  dispNiiSlice(def_vol_nii,"z",1);
-  title('Deformed Image')
-  
-  nexttile
-  dispNiiSlice(images(k),"z",1);
-  title('Target Image')
-
-  drawnow;
-end
+% for k = 1:100
+%   disp(k);
+%   [def_vol_nii, ~, ~] = ...
+%         deformNiiWithCPGsSliding(cpg1(k), cpg2(k), dist_nii, source_nii, images(k));
+%     
+%   t = tiledlayout(1,3);
+%   nexttile
+%   dispNiiSlice(source_nii,"z",1);
+%   title('Source Image')
+%   
+%   nexttile
+%   dispNiiSlice(def_vol_nii,"z",1);
+%   title('Deformed Image')
+%   
+%   nexttile
+%   dispNiiSlice(images(k),"z",1);
+%   title('Target Image')
+% 
+%   drawnow;
+% end
 
 %% 6.2 Calculate the surrogate signal
 
 x_20 = nan(n,1);
 for k = 1:n
-%     if k<=9
-%         target_nii = load_untouch_nii(['000',int2str(k),'.nii.gz']);
-%     elseif (10 <=k) && (k<=99)
-%         target_nii = load_untouch_nii(['00',int2str(k),'.nii.gz']);
-%     elseif (100 <=k) && (k <= 999)
-%         target_nii = load_untouch_nii(['0',int2str(k),'.nii.gz']);
-%     else
-%         target_nii = load_untouch_nii([int2str(k),'.nii.gz']);
-%     end
     
     target_img = images(k).img;
     target_img_y150 = target_img(:,150);
@@ -97,27 +88,15 @@ end
 
 figure;
 plot(x_20(1:end))
-xlabel('frame');
-ylabel('pixel');
+ylabel("skin position[index]")
+xlabel("image number")
 
 %% 6.3 
-% work already done for 6.3 is: fit CP image: (44,38,1,1,2)
-% work has not been done yet for 6.3 is: fit a separate model to every CP deformation
 % using the matrix format in the Appendix is recommended 
 
 % fit CP image: (44,38,1,1,2)
 SI_deform_CP_44_38 = nan(n,1);
-for k = 1:n
-%     if k<=9
-%         cpg1_nii = load_untouch_nii(['000',int2str(k),'_cpp_region1.nii.gz']);
-%     elseif (10 <=k) && (k<=99)
-%         cpg1_nii = load_untouch_nii(['00',int2str(k),'_cpp_region1.nii.gz']);
-%     elseif (100 <=k) && (k <= 999)
-%         cpg1_nii = load_untouch_nii(['0',int2str(k),'_cpp_region1.nii.gz']);
-%     else
-%         cpg1_nii = load_untouch_nii([int2str(k),'_cpp_region1.nii.gz']);
-%     end
-    
+for k = 1:n   
     cpg1_img = cpg1(k).img;
     SI_deform_CP_44_38(k) = cpg1_img(44,38,1,1,2);
 end
@@ -139,7 +118,7 @@ plot(x_20(1:100),SI_deform_CP_44_38(1:100),'bx');
 hold on;
 plot(x_20(1:100),Y_linear,'r-');
 ylim([30,55])
-xlabel("surrogate value")
+ylabel("surrogate value")
 ylabel("control-point value")
 hold off
 
@@ -172,88 +151,430 @@ S_p3 = [x_20(1:100).^3, x_20(1:100).^2,x_20(1:100),ones(length(x_20(1:100)),1)];
 C_p3 = S_p3\Y_train_mat;
 
 %% Get CP 44-38 and plot it
+
+% retrieve the coefficient of CP Region 1 AP and reshape them in a 67x67 grid
+C_reg1_AP = reshape(C(:,(4489*0+1):4489*1),[],67,67);
+C_p2_reg1_AP = reshape(C_p2(:,(4489*0+1):4489*1),[],67,67);
+C_p3_reg1_AP = reshape(C_p3(:,(4489*0+1):4489*1),[],67,67);
+
+figure;
+imshow(squeeze(C_reg1_AP(1,:,:))','DisplayRange',[])
+colormap 
+colorbar
+
 % retrieve the coefficient of CP Region 1 SI and reshape them in a 67x67 grid
-C_reg1_SI = reshape(C(:,(4489+1):8978),[],67,67);
-C_p2_reg1_SI = reshape(C_p2(:,(4489+1):8978),[],67,67);
-C_p3_reg1_SI = reshape(C_p3(:,(4489+1):8978),[],67,67);
+C_reg1_SI = reshape(C(:,(4489*1+1):4489*2),[],67,67);
+C_p2_reg1_SI = reshape(C_p2(:,(4489*1+1):4489*2),[],67,67);
+C_p3_reg1_SI = reshape(C_p3(:,(4489*1+1):4489*2),[],67,67);
 
-% % get the corresponding coefficients
-% C_44_38 = C_reg1_SI(:,44,38);
-% C_p2_44_38 = C_p2_reg1_SI(:,44,38);
-% C_p3_44_38 = C_p3_reg1_SI(:,44,38);
+figure;
+imshow(squeeze(C_reg1_SI(1,:,:))','DisplayRange',[])
+colormap 
+colorbar
 
+% retrieve the coefficient of CP Region 2 AP and reshape them in a 67x67 grid
+C_reg2_AP = reshape(C(:,(4489*2+1):4489*3),[],67,67);
+C_p2_reg2_AP = reshape(C_p2(:,(4489*2+1):4489*3),[],67,67);
+C_p3_reg2_AP = reshape(C_p3(:,(4489*2+1):4489*3),[],67,67);
+
+figure;
+imshow(squeeze(C_reg1_AP(1,:,:))','DisplayRange',[])
+colormap 
+colorbar
+
+% retrieve the coefficient of CP Region 2 SI and reshape them in a 67x67 grid
+C_reg2_SI = reshape(C(:,(4489*3+1):4489*4),[],67,67);
+C_p2_reg2_SI = reshape(C_p2(:,(4489*3+1):4489*4),[],67,67);
+C_p3_reg2_SI = reshape(C_p3(:,(4489*3+1):4489*4),[],67,67);
+
+
+cpg1_nii = load_untouch_nii('0100_cpp_region1.nii.gz');
+cpg2_nii = load_untouch_nii('0100_cpp_region2.nii.gz');
+figure;
+subplot(1,2,1)
+imshow(cpg1_nii.img(:,:,1,1,2)',[])
+colormap 
+colorbar
+title("0100 cpp region1.nii.gz")
+subplot(1,2,2)
+imshow(cpg2_nii.img(:,:,1,1,2)',[])
+colormap 
+colorbar
+title("0100 cpp region2.nii.gz")
+
+% retrieve the Y_train of CP: Region 1 AP and reshape them in a 67x67 grid
+Y_reg1_AP = reshape(Y_train_mat(:,(4489*0+1):4489*1),[],67,67);
+
+
+% retrieve the Y_train of CP: Region 1 SI and reshape them in a 67x67 grid
+Y_reg1_SI = reshape(Y_train_mat(:,(4489*1+1):4489*2),[],67,67);
+
+% retrieve the Y_train of CP: Region 2 AP and reshape them in a 67x67 grid
+Y_reg2_AP = reshape(Y_train_mat(:,(4489*2+1):4489*3),[],67,67);
+
+% retrieve the Y_train of CP: Region 2 SI and reshape them in a 67x67 grid
+Y_reg2_SI = reshape(Y_train_mat(:,(4489*3+1):4489*4),[],67,67);
 
 %% Print the estimated models at CP 44-38
 x=linspace(min(x_20(1:100))-0.5,max(x_20(1:100))+0.5,100)';
+% get the corresponding coefficients
 i = 44;
 j = 38;
-c_linear = C_reg1_SI(:,i,j);
-c_p2 = C_p2_reg1_SI(:,i,j);
-c_p3 = C_p3_reg1_SI(:,i,j);
+
+% region 1, AP
+% get the corresponding coefficients
+c1_r1_AP = C_reg1_AP(:,i,j);
+c2_r1_AP = C_p2_reg1_AP(:,i,j);
+c3_r1_AP = C_p3_reg1_AP(:,i,j);
 
 figure;
-%plot(x_20(1:100),SI_deform_CP_44_38(1:100),':')
-%hold on;
-plot(x_20(1:100),SI_deform_CP_44_38(1:100),'bx');
+subplot(2,2,1)
+plot(x_20(1:100),Y_reg1_AP(:,44,38),'bx');
 hold on;
-plot(x,[x,ones(100,1)]*c_linear,'r-');
+plot(x,[x,ones(100,1)]*c1_r1_AP,'r-','LineWidth',1.5);
 hold on
-%[sorted_p2,ind] = sort(S_p2*C_p2_44_38,'descend');
-%plot(x_20(ind), sorted_p2,'g-');
-plot(x,[x.^2,x,ones(100,1)]*c_p2,'g-');
+plot(x,[x.^2,x,ones(100,1)]*c2_r1_AP,'g-','LineWidth',1.5);
 hold on
-%[sorted_p3,ind] = sort(S_p3*C_p3_44_38,'descend');
-%plot(x_20(ind), sorted_p3,'m-');
-plot(x,[x.^3,x.^2,x,ones(100,1)]*c_p3,'m-');
+plot(x,[x.^3,x.^2,x,ones(100,1)]*c3_r1_AP,'m-','LineWidth',1.5);
+legend;
+xlabel("surrogate value")
+ylabel("control-point value")
+legend('data','linear',"2nd poly","3rd poly")
+title("Region 1, AP")
+hold off
+
+% region 2, AP
+% get the corresponding coefficients
+i = 44;
+j = 38;
+c1_r2_AP = C_reg2_AP(:,i,j);
+c2_r2_AP = C_p2_reg2_AP(:,i,j);
+c3_r2_AP = C_p3_reg2_AP(:,i,j);
+
+subplot(2,2,2);
+plot(x_20(1:100),Y_reg2_AP(:,44,38),'bx');
+hold on;
+plot(x,[x,ones(100,1)]*c1_r2_AP,'r-','LineWidth',1.5);
+hold on
+plot(x,[x.^2,x,ones(100,1)]*c2_r2_AP,'g-','LineWidth',1.5);
+hold on
+plot(x,[x.^3,x.^2,x,ones(100,1)]*c3_r2_AP,'m-','LineWidth',1.5);
+legend;
+xlabel("surrogate value")
+ylabel("control-point value")
+legend('data','linear',"2nd poly","3rd poly")
+title("Region 2, AP")
+hold off
+
+% region 1, SI
+c1_r1_SI = C_reg1_SI(:,i,j);
+c2_r1_SI = C_p2_reg1_SI(:,i,j);
+c3_r1_SI = C_p3_reg1_SI(:,i,j);
+
+subplot(2,2,3)
+plot(x_20(1:100),Y_reg1_SI(:,44,38),'bx');
+hold on;
+plot(x,[x,ones(100,1)]*c1_r1_SI,'r-','LineWidth',1.5);
+hold on
+plot(x,[x.^2,x,ones(100,1)]*c2_r1_SI,'g-','LineWidth',1.5);
+hold on
+plot(x,[x.^3,x.^2,x,ones(100,1)]*c3_r1_SI,'m-','LineWidth',1.5);
 ylim([30,55])
 legend;
 xlabel("surrogate value")
 ylabel("control-point value")
 legend('data','linear',"2nd poly","3rd poly")
+title("Region 1, SI")
+hold off
+
+% region 2, SI
+% get the corresponding coefficients
+i = 44;
+j = 38;
+c1_r2_SI = C_reg2_SI(:,i,j);
+c2_r2_SI = C_p2_reg2_SI(:,i,j);
+c3_r2_SI = C_p3_reg2_SI(:,i,j);
+subplot(2,2,4);
+plot(x_20(1:100),Y_reg2_SI(:,44,38),'bx');
+hold on;
+plot(x,[x,ones(100,1)]*c1_r2_SI,'r-','LineWidth',1.5);
+hold on
+plot(x,[x.^2,x,ones(100,1)]*c2_r2_SI,'g-','LineWidth',1.5);
+hold on
+plot(x,[x.^3,x.^2,x,ones(100,1)]*c3_r2_SI,'m-','LineWidth',1.5);
+legend;
+xlabel("surrogate value")
+ylabel("control-point value")
+legend('data','linear',"2nd poly","3rd poly")
+title("Region 2, SI")
+hold off
+%% model fitting on test data
+for i=1:1400
+    Y_test_mat(i,:) = [reshape(cpg1(100+i).img(:,:,1,1,1), [1,67*67]), ...
+                        reshape(cpg1(100+i).img(:,:,1,1,2), [1,67*67]), ...
+                        reshape(cpg2(100+i).img(:,:,1,1,1), [1,67*67]), ...
+                        reshape(cpg2(100+i).img(:,:,1,1,2), [1,67*67])];
+end
+n_test = 1400;
+x_test =linspace(min(x_20(101:1500))-0.5,max(x_20(101:1500))+0.5,1400)';
+
+% retrieve the Y_train of CP: Region 1 AP and reshape them in a 67x67 grid
+Y_reg1_AP_test = reshape(Y_test_mat(:,(4489*0+1):4489*1),[],67,67);
+
+% retrieve the Y_train of CP: Region 1 SI and reshape them in a 67x67 grid
+Y_reg1_SI_test = reshape(Y_test_mat(:,(4489*1+1):4489*2),[],67,67);
+
+% retrieve the Y_train of CP: Region 2 AP and reshape them in a 67x67 grid
+Y_reg2_AP_test = reshape(Y_test_mat(:,(4489*2+1):4489*3),[],67,67);
+
+% retrieve the Y_train of CP: Region 2 SI and reshape them in a 67x67 grid
+Y_reg2_SI_test = reshape(Y_test_mat(:,(4489*3+1):4489*4),[],67,67);
+
+% get the corresponding coefficients
+i = 44;
+j = 38;
+
+% region 1, AP
+% get the corresponding coefficients
+c1_r1_AP = C_reg1_AP(:,i,j);
+c2_r1_AP = C_p2_reg1_AP(:,i,j);
+c3_r1_AP = C_p3_reg1_AP(:,i,j);
+
+figure;
+subplot(2,2,1)
+plot(x_20(101:1500),Y_reg1_AP_test(:,44,38),'bx');
+hold on;
+plot(x_test,[x_test,ones(1400,1)]*c1_r1_AP,'r-','LineWidth',1.5);
+hold on
+plot(x_test,[x_test.^2,x_test,ones(1400,1)]*c2_r1_AP,'g-','LineWidth',1.5);
+hold on
+plot(x_test,[x_test.^3,x_test.^2,x_test,ones(1400,1)]*c3_r1_AP,'m-','LineWidth',1.5);
+legend;
+xlabel("surrogate value")
+ylabel("control-point value")
+legend('data','linear',"2nd poly","3rd poly")
+title("Region 1, AP")
+hold off
+
+% region 2, AP
+% get the corresponding coefficients
+i = 44;
+j = 38;
+c1_r2_AP = C_reg2_AP(:,i,j);
+c2_r2_AP = C_p2_reg2_AP(:,i,j);
+c3_r2_AP = C_p3_reg2_AP(:,i,j);
+
+subplot(2,2,2);
+plot(x_20(101:1500),Y_reg2_AP_test(:,44,38),'bx');
+hold on;
+plot(x_test,[x_test,ones(1400,1)]*c1_r2_AP,'r-','LineWidth',1.5);
+hold on
+plot(x_test,[x_test.^2,x_test,ones(1400,1)]*c2_r2_AP,'g-','LineWidth',1.5);
+hold on
+plot(x_test,[x_test.^3,x_test.^2,x_test,ones(1400,1)]*c3_r2_AP,'m-','LineWidth',1.5);
+legend;
+xlabel("surrogate value")
+ylabel("control-point value")
+legend('data','linear',"2nd poly","3rd poly")
+title("Region 2, AP")
+hold off
+
+% region 1, SI
+c1_r1_SI = C_reg1_SI(:,i,j);
+c2_r1_SI = C_p2_reg1_SI(:,i,j);
+c3_r1_SI = C_p3_reg1_SI(:,i,j);
+
+subplot(2,2,3)
+plot(x_20(101:1500),Y_reg1_SI_test(:,44,38),'bx');
+hold on;
+plot(x_test,[x_test,ones(1400,1)]*c1_r1_SI,'r-','LineWidth',1.5);
+hold on
+plot(x_test,[x_test.^2,x_test,ones(1400,1)]*c2_r1_SI,'g-','LineWidth',1.5);
+hold on
+plot(x_test,[x_test.^3,x_test.^2,x_test,ones(1400,1)]*c3_r1_SI,'m-','LineWidth',1.5);
+legend;
+xlabel("surrogate value")
+ylabel("control-point value")
+legend('data','linear',"2nd poly","3rd poly")
+title("Region 1, SI")
+hold off
+
+% region 2, SI
+% get the corresponding coefficients
+i = 44;
+j = 38;
+c1_r2_SI = C_reg2_SI(:,i,j);
+c2_r2_SI = C_p2_reg2_SI(:,i,j);
+c3_r2_SI = C_p3_reg2_SI(:,i,j);
+subplot(2,2,4);
+plot(x_20(101:1500),Y_reg2_SI_test(:,44,38),'bx');
+hold on;
+plot(x_test,[x_test,ones(1400,1)]*c1_r2_SI,'r-','LineWidth',1.5);
+hold on
+plot(x_test,[x_test.^2,x_test,ones(1400,1)]*c2_r2_SI,'g-','LineWidth',1.5);
+hold on
+plot(x_test,[x_test.^3,x_test.^2,x_test,ones(1400,1)]*c3_r2_SI,'m-','LineWidth',1.5);
+legend;
+xlabel("surrogate value")
+ylabel("control-point value")
+legend('data','linear',"2nd poly","3rd poly")
+title("Region 2, SI")
 hold off
 
 %% Calculate the residual fitting error.
-n_train = 100;
+n_train =100;
 res_lin = (Y_train_mat - S_lin*C);
 res_p2 = (Y_train_mat - S_p2*C_p2);
 res_p3 = (Y_train_mat - S_p2*C_p2);
 
-mse_lin = sum((Y_train_mat - S_lin*C).^2,1)./(n_train- 2);
-mse_p2 = sum((Y_train_mat - S_p2*C_p2).^2,1)./(n_train- 3);
-mse_p3 = sum((Y_train_mat - S_p3*C_p3).^2,1)./(n_train- 4);
+mse_lin = sum((Y_train_mat - S_lin*C).^2,1)./n_train;
+mse_p2 = sum((Y_train_mat - S_p2*C_p2).^2,1)./n_train;
+mse_p3 = sum((Y_train_mat - S_p3*C_p3).^2,1)./n_train;
+
 
 % retrieve the info CP: Region 1 AP and reshape them in a 67x67 grid
-mse_reg1_AP = reshape(mse_lin(1,(4489*0+1):4489*1),67,67);
+mse_reg1_AP1 = reshape(mse_lin(1,(4489*0+1):4489*1),67,67);
 
 % retrieve info of CP: Region 1 SI and reshape them in a 67x67 grid
-mse_reg1_SI = reshape(mse_lin(1,(4489*1+1):4489*2),67,67);
+mse_reg1_SI1 = reshape(mse_lin(1,(4489*1+1):4489*2),67,67);
 
 % retrieve info of CP: Region 2 AP and reshape them in a 67x67 grid
-mse_reg2_AP =  reshape(mse_lin(1,(4489*2+1):4489*3),67,67);
+mse_reg2_AP1 =  reshape(mse_lin(1,(4489*2+1):4489*3),67,67);
 
 % retrieve info of CP: Region 2 SI and reshape them in a 67x67 grid
-mse_reg2_SI =  reshape(mse_lin(1,(4489*3+1):4489*4),67,67);
-
+mse_reg2_SI1 =  reshape(mse_lin(1,(4489*3+1):4489*4),67,67);
 dist_map = dist_nii.img;
 
 figure;
-subplot(1,3,1)
-imshow(mse_reg1_AP',[]);
-subplot(1,3,2)
-imshow(mse_reg2_AP',[]);
-subplot(1,3,3)
-dispNiiSlice(source_nii,"z",1)
+subplot(1,2,1)
+imshow(mse_reg1_AP1',[]);
+colormap hot
+colorbar
+title("MSE : region 1, AP")
+subplot(1,2,2)
+imshow(mse_reg2_AP1',[]);
+colormap hot
+colorbar
+title("MSE : region 2, AP")
+
+figure;
+subplot(1,2,1)
+imshow(mse_reg1_SI1',[]);
+colormap hot
+colorbar
+title("MSE : region 1, SI")
+subplot(1,2,2)
+imshow(mse_reg2_SI1',[]);
+colormap hot
+colorbar
+title("MSE : region 2, SI")
+
+figure;
+imshow(mse_reg1_SI1'+mse_reg2_SI1'+mse_reg1_AP1'+mse_reg2_AP1',[]);
+colormap turbo
+colorbar
+title("MSE: combination of the four parts")
+
+% retrieve the info CP: Region 1 AP and reshape them in a 67x67 grid
+mse_reg1_AP2 = reshape(mse_p2(1,(4489*0+1):4489*1),67,67);
+
+% retrieve info of CP: Region 1 SI and reshape them in a 67x67 grid
+mse_reg1_SI2 = reshape(mse_p2(1,(4489*1+1):4489*2),67,67);
+
+% retrieve info of CP: Region 2 AP and reshape them in a 67x67 grid
+mse_reg2_AP2 =  reshape(mse_p2(1,(4489*2+1):4489*3),67,67);
+
+% retrieve info of CP: Region 2 SI and reshape them in a 67x67 grid
+mse_reg2_SI2 =  reshape(mse_p2(1,(4489*3+1):4489*4),67,67);
 
 
 figure;
-subplot(1,3,1)
-imshow(mse_reg1_SI',[]);
-subplot(1,3,2)
-imshow(mse_reg2_SI',[]);
-subplot(1,3,3)
-dispNiiSlice(source_nii,"z",1)
+subplot(1,2,1)
+imshow(mse_reg1_AP2',[]);
+colormap hot
+colorbar
+title("MSE : region 1, AP")
+subplot(1,2,2)
+imshow(mse_reg2_AP2',[]);
+colormap hot
+colorbar
+title("MSE : region 2, AP")
 
-%% Parametric bootstrapping
+figure;
+subplot(1,2,1)
+imshow(mse_reg1_SI2',[]);
+colormap hot
+colorbar
+title("MSE : region 1, SI")
+subplot(1,2,2)
+imshow(mse_reg2_SI2',[]);
+colormap hot
+colorbar
+title("MSE : region 2, SI")
+
+figure;
+imshow(mse_reg1_SI2'+mse_reg2_SI2'+mse_reg1_AP2'+mse_reg1_AP2',[]);
+colormap turbo
+colorbar
+title("MSE: 2nd poly")
+
+
+% retrieve the info CP: Region 1 AP and reshape them in a 67x67 grid
+mse_reg1_AP3 = reshape(mse_p3(1,(4489*0+1):4489*1),67,67);
+
+% retrieve info of CP: Region 1 SI and reshape them in a 67x67 grid
+mse_reg1_SI3 = reshape(mse_p3(1,(4489*1+1):4489*2),67,67);
+
+% retrieve info of CP: Region 2 AP and reshape them in a 67x67 grid
+mse_reg2_AP3 =  reshape(mse_p3(1,(4489*2+1):4489*3),67,67);
+
+% retrieve info of CP: Region 2 SI and reshape them in a 67x67 grid
+mse_reg2_SI3 =  reshape(mse_p3(1,(4489*3+1):4489*4),67,67);
+
+
+figure;
+subplot(1,2,1)
+imshow(mse_reg1_AP3',[]);
+colormap hot
+colorbar
+title("MSE : region 1, AP")
+subplot(1,2,2)
+imshow(mse_reg2_AP3',[]);
+colormap hot
+colorbar
+title("MSE : region 2, AP")
+
+figure;
+subplot(1,2,1)
+imshow(mse_reg1_SI3',[]);
+colormap hot
+colorbar
+title("MSE : region 1, SI")
+subplot(1,2,2)
+imshow(mse_reg2_SI3',[]);
+colormap hot
+colorbar
+title("MSE : region 2, SI")
+
+figure;
+subplot(1,3,1)
+imshow(mse_reg1_SI1'+mse_reg2_SI1'+mse_reg1_AP1'+mse_reg2_AP1',[]);
+colormap turbo
+colorbar
+title("MSE: linear reg")
+subplot(1,3,2)
+imshow(mse_reg1_SI2'+mse_reg2_SI2'+mse_reg1_AP2'+mse_reg2_AP2',[]);
+colormap turbo
+colorbar
+title("MSE: 2nd poly")
+subplot(1,3,3)
+imshow(mse_reg1_SI3'+mse_reg2_SI3'+mse_reg1_AP3'+mse_reg2_AP3',[]);
+colormap turbo
+colorbar
+title("MSE: 3rd poly")
+%% bootstrap 
+% version one: parametric bootstap
+% resampling Y_train
 
 n_boot = 1000;
 C1_boot_v1 = nan(n_boot,2);
@@ -263,61 +584,84 @@ C3_boot_v1 = nan(n_boot,4);
 Y_train = SI_deform_CP_44_38(1:100);
 X_linear = [ones(length(x_20(1:100)),1),x_20(1:100)];
 Y_linear = X_linear*inv(X_linear'*X_linear)*X_linear'*Y_train;
+sigma = sqrt(sum((Y_linear-Y_train).^2)/(100-2));
 
-X_poly2 = [x_20(1:100).^2,x_20(1:100),ones(length(x_20(1:100)),1)];
-Y_poly2 = X_poly2*inv(X_poly2'*X_poly2)*X_poly2'*Y_train;
-
-X_poly3 = [x_20(1:100).^3, x_20(1:100).^2,x_20(1:100),ones(length(x_20(1:100)),1)];
-Y_poly3 = X_poly3*inv(X_poly3'*X_poly3)*X_poly3'*Y_train;
-
-sigma1 = sqrt(sum((Y_linear-Y_train).^2)/(100-2));
-sigma2 = sqrt(sum((Y_poly2-Y_train).^2)/(100-2));
-sigma3 = sqrt(sum((Y_poly3-Y_train).^2)/(100-2));
-
+coef_v1 = nan(n_boot,2);
 for i = 1: n_boot
-
-    Y1_train_boot_v1 = Y_train + normrnd(0,sigma1,[100,1]);
-    C1_boot_v1(i,:) = inv(X_linear'*X_linear)*X_linear'*Y1_train_boot_v1;
-    
-    Y2_train_boot_v1 = Y_train + normrnd(0,sigma2,[100,1]);
-    C2_boot_v1(i,:) = inv(X_poly2'*X_poly2)*X_poly2'*Y2_train_boot_v1;
-    
-    Y3_train_boot_v1 = Y_train + normrnd(0,sigma3,[100,1]);
-    C3_boot_v1(i,:) = inv(X_poly3'*X_poly3)*X_poly3'*Y3_train_boot_v1;
+    T = 100; 
+    Y_train_boot_v1 = Y_train + normrnd(0,sigma,[100,1]);
+    coef_v1(i,:) = inv(X_linear'*X_linear)*X_linear'*Y_train_boot_v1;
 end
 
-twoSigma = zeros(9,2);
-conf95 = zeros(9,2);
-[twoSigma(1,:),conf95(1,:)] = getSigmaConf(C1_boot_v1(:,1));
-[twoSigma(2,:),conf95(2,:)] = getSigmaConf(C1_boot_v1(:,2));
+figure;
+subplot(1,2,1)
+hist(coef_v1(:,1))
+subplot(1,2,2)
+hist(coef_v1(:,2))
 
-[twoSigma(3,:),conf95(3,:)] = getSigmaConf(C2_boot_v1(:,1));
-[twoSigma(4,:),conf95(4,:)] = getSigmaConf(C2_boot_v1(:,2));
-[twoSigma(5,:),conf95(5,:)] = getSigmaConf(C2_boot_v1(:,3));
+% version two : residual bootstrap
+% version three: wild bootstap
 
-[twoSigma(6,:),conf95(6,:)] = getSigmaConf(C3_boot_v1(:,1));
-[twoSigma(7,:),conf95(7,:)] = getSigmaConf(C3_boot_v1(:,2));
-[twoSigma(8,:),conf95(8,:)] = getSigmaConf(C3_boot_v1(:,3));
-[twoSigma(9,:),conf95(9,:)] = getSigmaConf(C3_boot_v1(:,4));
+Y_train = SI_deform_CP_44_38(1:100);
+X_linear = [ones(length(x_20(1:100)),1),x_20(1:100)];
 
-% plotBootstrap(twoSigma,conf95);
+
+%% % version one: parametric bootstap
+% resampling Y_train
+
+n_boot = 1000;
+C1_boot_v1 = nan(n_boot,2);
+C2_boot_v1 = nan(n_boot,3);
+C3_boot_v1 = nan(n_boot,4);
+
+Y_train = SI_deform_CP_44_38(1:100);
+X_linear = [ones(length(x_20(1:100)),1),x_20(1:100)];
+Y_linear = X_linear*inv(X_linear'*X_linear)*X_linear'*Y_train;
+sigma = sqrt(sum((Y_linear-Y_train).^2)/(100-2));
+
+coef_v1 = nan(n_boot,2);
+for i = 1: n_boot
+    T = 100; 
+    Y_train_boot_v1 = Y_train + normrnd(0,sigma,[100,1]);
+    coef_v1(i,:) = inv(X_linear'*X_linear)*X_linear'*Y_train_boot_v1;
+end
 
 figure;
+subplot(1,2,1)
+hist(coef_v1(:,1))
+subplot(1,2,2)
+hist(coef_v1(:,2))
 
-hist(C1_boot_v1(:,1))
-title('Linear Model Coefficient 1');
-maxY = ylim;
-hold on
-plot(conf95(1,:), 1.05*[maxY(2), maxY(2)],'r--x','LineWidth',1.5);
-hold on
-plot(twoSigma(1,:), 1.1*[maxY(2), maxY(2)], 'b-o','LineWidth',1.5);
-legend('p(x|A)','95% range','2 Sigma','location','west','LineWidth',1.5);
+% version two : residual bootstrap
+% version three: wild bootstap
+
+Y_train = SI_deform_CP_44_38(1:100);
+X_linear = [ones(length(x_20(1:100)),1),x_20(1:100)];
+
+% S0: mean 
+% 2.5% - 97.5%
+coef_v1_1 = coef_v1(:,1);
+sorted_S0 = sort(coef_v1_1);
+
+S0_025_boot3 = sorted_S0(0.025*n_boot); %4.1449e+03
+S0_975_boot3 = sorted_S0(0.975*n_boot); %4.3646e+03
+
+% 2 sigma 
+S0_2sigma_left_boot3 = mean(sorted_S0)+2*std(sorted_S0); %4.3658e+03
+S0_2sigma_right_boot3 = mean(sorted_S0)-2*std(sorted_S0); % 4.1453e+03
+
+figure;
+hist(coef_v1_1);
+hold on;
+plot([S0_025_boot3,S0_975_boot3],[270,270],"r","linewidth",2);
+hold on;
+plot([S0_2sigma_left_boot3,S0_2sigma_right_boot3],[280,280],"g","linewidth",2);
+legend("P(x|A)","95%","2 sigma")
+%title("Wild Bootstrap: S0")
+hold off;
 
 
-
-
-%% version two : redidual bootstrapping
-
+% version two: residual bootstrap
 n_boot = 1000;
 C1_boot_v2 = nan(n_boot,2);
 C2_boot_v2 = nan(n_boot,3);
@@ -326,119 +670,35 @@ C3_boot_v2 = nan(n_boot,4);
 Y_train = SI_deform_CP_44_38(1:100);
 X_linear = [ones(length(x_20(1:100)),1),x_20(1:100)];
 Y_linear = X_linear*inv(X_linear'*X_linear)*X_linear'*Y_train;
+sigma = sqrt(sum((Y_linear-Y_train).^2)/(100-2));
 
-X_poly2 = [x_20(1:100).^2,x_20(1:100),ones(length(x_20(1:100)),1)];
-Y_poly2 = X_poly2*inv(X_poly2'*X_poly2)*X_poly2'*Y_train;
-
-X_poly3 = [x_20(1:100).^3, x_20(1:100).^2,x_20(1:100),ones(length(x_20(1:100)),1)];
-Y_poly3 = X_poly3*inv(X_poly3'*X_poly3)*X_poly3'*Y_train;
-
-noises1 = Y_train - Y_linear;
-noises2 = Y_train - Y_poly2;
-noises3 = Y_train - Y_poly3;
-
+coef_v2 = nan(n_boot,2);
 for i = 1: n_boot
-    Y1_train_boot_v2 = Y_linear + noises1(ceil(rand(n_train,1)*n_train));
-    C1_boot_v2(i,:) = inv(X_linear'*X_linear)*X_linear'*Y1_train_boot_v2;
-    
-    Y2_train_boot_v2 = Y_poly2 + noises2(ceil(rand(n_train,1)*n_train));
-    C2_boot_v2(i,:) = inv(X_poly2'*X_poly2)*X_poly2'*Y2_train_boot_v2;
-    
-    Y3_train_boot_v2 = Y_poly3 + noises3(ceil(rand(n_train,1)*n_train));
-    C3_boot_v2(i,:) = inv(X_poly3'*X_poly3)*X_poly3'*Y3_train_boot_v2;
+    T = 100; 
+    Y_train_boot_v2 = Y_train + normrnd(0,sigma,[100,1]);
+    coef_v2(i,:) = inv(X_linear'*X_linear)*X_linear'*Y_train_boot_v2;
 end
 
-twoSigma_v2 = zeros(9,2);
-conf95_v2 = zeros(9,2);
-[twoSigma_v2(1,:),conf95_v2(1,:)] = getSigmaConf(C1_boot_v2(:,1));
-[twoSigma_v2(2,:),conf95_v2(2,:)] = getSigmaConf(C1_boot_v2(:,2));
-
-[twoSigma_v2(3,:),conf95_v2(3,:)] = getSigmaConf(C2_boot_v2(:,1));
-[twoSigma_v2(4,:),conf95_v2(4,:)] = getSigmaConf(C2_boot_v2(:,2));
-[twoSigma_v2(5,:),conf95_v2(5,:)] = getSigmaConf(C2_boot_v2(:,3));
-
-[twoSigma_v2(6,:),conf95_v2(6,:)] = getSigmaConf(C3_boot_v2(:,1));
-[twoSigma_v2(7,:),conf95_v2(7,:)] = getSigmaConf(C3_boot_v2(:,2));
-[twoSigma_v2(8,:),conf95_v2(8,:)] = getSigmaConf(C3_boot_v2(:,3));
-[twoSigma_v2(9,:),conf95_v2(9,:)] = getSigmaConf(C3_boot_v2(:,4));
-
-% plotBootstrap(twoSigma_v2,conf95_v2);
-
 figure;
-hist(C1_boot_v2(:,1))
-title('2nd Order Polynomial Model Coefficient 1');
-maxY = ylim;
-hold on
-plot(conf95_v2(1,:), 1.05*[maxY(2), maxY(2)],'r--x','LineWidth',1.5);
-hold on
-plot(twoSigma_v2(1,:), 1.1*[maxY(2), maxY(2)], 'b-o','LineWidth',1.5);
-legend('p(x|A)','95% range','2 Sigma','location','west');
+subplot(1,2,1)
+hist(coef_v2(:,1))
+subplot(1,2,2)
+hist(coef_v2(:,2))
 
-
-%% version three : wild bootstrap
+% version three : wild bootstrap
 coef_v3 = nan(n_boot,2);
-
-C1_boot_v3 = nan(n_boot,2);
-C2_boot_v3 = nan(n_boot,3);
-C3_boot_v3 = nan(n_boot,4);
-
 Y_train = SI_deform_CP_44_38(1:100);
 X_linear = [ones(length(x_20(1:100)),1),x_20(1:100)];
 Y_linear = X_linear*inv(X_linear'*X_linear)*X_linear'*Y_train;
+noises = Y_train - Y_linear;
 
-X_poly2 = [x_20(1:100).^2,x_20(1:100),ones(length(x_20(1:100)),1)];
-Y_poly2 = X_poly2*inv(X_poly2'*X_poly2)*X_poly2'*Y_train;
-
-X_poly3 = [x_20(1:100).^3, x_20(1:100).^2,x_20(1:100),ones(length(x_20(1:100)),1)];
-Y_poly3 = X_poly3*inv(X_poly3'*X_poly3)*X_poly3'*Y_train;
-
-noises1 = Y_train - Y_linear;
-noises2 = Y_train - Y_poly2;
-noises3 = Y_train - Y_poly3;
-
-for i = 1: n_boot    
-    Y1_train_boot_v3 = Y_linear + noises1(ceil(rand(n_train,1)*n_train)).* normrnd(0,1,[100,1]);
-    C1_boot_v3(i,:) = inv(X_linear'*X_linear)*X_linear'*Y1_train_boot_v3;
-    
-    Y2_train_boot_v3 = Y_poly2 + noises2(ceil(rand(n_train,1)*n_train)).* normrnd(0,1,[100,1]);
-    C2_boot_v3(i,:) = inv(X_poly2'*X_poly2)*X_poly2'*Y2_train_boot_v3;
-    
-    Y3_train_boot_v3 = Y_poly3 + noises3(ceil(rand(n_train,1)*n_train)).* normrnd(0,1,[100,1]);
-    C3_boot_v3(i,:) = inv(X_poly3'*X_poly3)*X_poly3'*Y3_train_boot_v3;
+for i = 1: n_boot
+    Y_train_boot_v3 = Y_linear + noises(ceil(rand(n_train,1)*n_train)).* normrnd(0,1,[100,1]);
+    coef_v3(i,:) = inv(X_linear'*X_linear)*X_linear'*Y_train_boot_v3;
 end
 
-
-twoSigma_v3 = zeros(9,2);
-conf95_v3 = zeros(9,2);
-[twoSigma_v3(1,:),conf95_v3(1,:)] = getSigmaConf(C1_boot_v3(:,1));
-[twoSigma_v3(2,:),conf95_v3(2,:)] = getSigmaConf(C1_boot_v3(:,2));
-
-[twoSigma_v3(3,:),conf95_v3(3,:)] = getSigmaConf(C2_boot_v3(:,1));
-[twoSigma_v3(4,:),conf95_v3(4,:)] = getSigmaConf(C2_boot_v3(:,2));
-[twoSigma_v3(5,:),conf95_v3(5,:)] = getSigmaConf(C2_boot_v3(:,3));
-
-[twoSigma_v3(6,:),conf95_v3(6,:)] = getSigmaConf(C3_boot_v3(:,1));
-[twoSigma_v3(7,:),conf95_v3(7,:)] = getSigmaConf(C3_boot_v3(:,2));
-[twoSigma_v3(8,:),conf95_v3(8,:)] = getSigmaConf(C3_boot_v3(:,3));
-[twoSigma_v3(9,:),conf95_v3(9,:)] = getSigmaConf(C3_boot_v3(:,4));
-
-% plotBootstrap(twoSigma_v3,conf95_v3);
-
 figure;
-hist(C1_boot_v3(:,1))
-title('3rd Order Polynomial Model Coefficient 1');
-maxY = ylim;
-hold on
-plot(conf95_v3(1,:), 1.05*[maxY(2), maxY(2)],'r--x','LineWidth',1.5);
-hold on
-plot(twoSigma_v3(1,:), 1.1*[maxY(2), maxY(2)], 'b-o','LineWidth',1.5);
-legend('p(x|A)','95% range','2 Sigma','location','west');
-
-%% Comparing Bootstraps
-
-% prints a plot for each coefficient (9 plots) if grouped is false
-% or plot groups based on model
-grouped = false;
-compareBootstraps(twoSigma,twoSigma_v2,twoSigma_v3,conf95,conf95_v2,conf95_v3,grouped);
-
-
+subplot(1,2,1)
+hist(coef_v3(:,1))
+subplot(1,2,2)
+hist(coef_v3(:,2))
